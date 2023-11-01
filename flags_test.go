@@ -26,6 +26,8 @@ func Test_FlagsDefaults(t *testing.T) {
 		{"p", flags.Paranoid, false},
 		{"lf", flags.LogFormat, "text"},
 		{"ll", flags.LogLevel, "warn"},
+		{"v", flags.ShowVersion, false},
+		{"h", flags.Help, false},
 	}
 
 	for _, tt := range tests {
@@ -90,13 +92,13 @@ func Test_FlagsFromArgs(t *testing.T) {
 	oldArgs := os.Args
 	defer func() { os.Args = oldArgs }()
 
-	os.Args = []string{"envdir", "-d", "/dir", "-f", "-p", "-lf", "json", "-ll", "error", "sh", "-c", "ls -l"}
+	os.Args = []string{"envdir", "-d", "/dir", "-f", "-p", "-lf", "json", "-ll", "error", "-v", "sh", "-c", "ls -l"}
 	flags := NewFlags(&flagsOutput)
 
 	var tests = []struct {
-		flagName     string
-		flagValue    any
-		defaultValue any
+		flagName      string
+		flagValue     any
+		expectedValue any
 	}{
 		{"args0", flags.Cmd, "sh"},
 		{"cmd1", flags.Args[0], "-c"},
@@ -106,19 +108,20 @@ func Test_FlagsFromArgs(t *testing.T) {
 		{"p", flags.Paranoid, true},
 		{"lf", flags.LogFormat, "json"},
 		{"ll", flags.LogLevel, "error"},
+		{"v", flags.ShowVersion, true},
 	}
 
 	for _, tt := range tests {
-		switch defaultValue := tt.defaultValue.(type) {
+		switch expectedValue := tt.expectedValue.(type) {
 		case string:
 			flagValue := tt.flagValue.(string)
-			if flagValue != defaultValue {
-				t.Errorf("invalid default value of flag %q: expected %q, got %q", tt.flagName, flagValue, defaultValue)
+			if flagValue != expectedValue {
+				t.Errorf("invalid default value of flag %q: expected %q, got %q", tt.flagName, expectedValue, flagValue)
 			}
 		case bool:
 			flagValue := tt.flagValue.(bool)
-			if flagValue != defaultValue {
-				t.Errorf("invalid default value of flag %q: expected %t, got %t", tt.flagName, flagValue, defaultValue)
+			if flagValue != expectedValue {
+				t.Errorf("invalid default value of flag %q: expected %t, got %t", tt.flagName, expectedValue, flagValue)
 			}
 		default:
 			t.Fatal("broken flags default test")
@@ -134,9 +137,9 @@ func Test_FlagsEmptyArgs(t *testing.T) {
 	flags := NewFlags(&flagsOutput)
 
 	var tests = []struct {
-		flagName     string
-		flagValue    any
-		defaultValue any
+		flagName      string
+		flagValue     any
+		expectedValue any
 	}{
 		{"args0", flags.Cmd, ""},
 		{"d", flags.Dir, "/secrets"},
@@ -144,23 +147,36 @@ func Test_FlagsEmptyArgs(t *testing.T) {
 		{"p", flags.Paranoid, false},
 		{"lf", flags.LogFormat, "text"},
 		{"ll", flags.LogLevel, "warn"},
+		{"v", flags.ShowVersion, false},
+		{"h", flags.Help, false},
 	}
 
 	for _, tt := range tests {
-		switch defaultValue := tt.defaultValue.(type) {
+		switch expectedValue := tt.expectedValue.(type) {
 		case string:
 			flagValue := tt.flagValue.(string)
-			if flagValue != defaultValue {
-				t.Errorf("invalid default value of flag %q: expected %q, got %q", tt.flagName, flagValue, defaultValue)
+			if flagValue != expectedValue {
+				t.Errorf("invalid default value of flag %q: expected %q, got %q", tt.flagName, expectedValue, flagValue)
 			}
 		case bool:
 			flagValue := tt.flagValue.(bool)
-			if flagValue != defaultValue {
-				t.Errorf("invalid default value of flag %q: expected %t, got %t", tt.flagName, flagValue, defaultValue)
+			if flagValue != expectedValue {
+				t.Errorf("invalid default value of flag %q: expected %t, got %t", tt.flagName, expectedValue, flagValue)
 			}
 		default:
 			t.Fatal("broken flags default test")
 		}
 	}
+}
 
+func Test_FlagsHelpFlag(t *testing.T) {
+	oldArgs := os.Args
+	defer func() { os.Args = oldArgs }()
+
+	os.Args = []string{"envdir", "-h"}
+	flags := NewFlags(&flagsOutput)
+
+	if !flags.Help {
+		t.Errorf("invalid Help flag, expected true, got false")
+	}
 }

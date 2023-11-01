@@ -5,14 +5,37 @@ import (
 	"os/exec"
 )
 
+var (
+	version = "dev"
+	commit  = "unavailable"
+	date    = "unknown"
+)
+
 type Cmd struct {
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 }
 
+func (c Cmd) ShowVersion() {
+	if len(commit) > 8 {
+		commit = commit[:7]
+	}
+	_, _ = c.Stdout.Write([]byte(`envdir version ` + version + `, build ` + commit + ` (` + date + ")\n"))
+}
+
 func (c Cmd) Execute() int {
 	flags := NewFlags(c.Stdout)
+
+	if flags.Help {
+		return 0
+	}
+
+	if flags.ShowVersion {
+		c.ShowVersion()
+		return 0
+	}
+
 	logger := NewLogger(flags, c.Stdout)
 
 	logger.Debug("using config", LogFields{"dir": flags.Dir, "fail": flags.Fail, "log-level": flags.LogLevel, "log-format": flags.LogFormat})

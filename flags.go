@@ -1,17 +1,21 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"io"
 	"os"
 )
 
 type Flags struct {
-	Dir       string
-	Fail      bool
-	Paranoid  bool
-	LogFormat string
-	LogLevel  string
+	Help bool
+
+	Dir         string
+	Fail        bool
+	Paranoid    bool
+	LogFormat   string
+	LogLevel    string
+	ShowVersion bool
 
 	Cmd  string
 	Args []string
@@ -36,8 +40,10 @@ func NewFlags(outputBuffer io.Writer) *Flags {
 	flagSet.BoolVar(&flags.Paranoid, "p", flags.Getenv("ENVDIR_PARANOID", "false") == "true", "Don't pass any env vars except default system ones")
 	flagSet.StringVar(&flags.LogFormat, "lf", flags.Getenv("ENVDIR_LOG_FORMAT", "text"), "Log format (text/json)")
 	flagSet.StringVar(&flags.LogLevel, "ll", flags.Getenv("ENVDIR_LOG_LEVEL", "warn"), "Log level (error/warn/info/debug)")
+	flagSet.BoolVar(&flags.ShowVersion, "v", false, "Print version info and exit")
 
-	_ = flagSet.Parse(os.Args[1:])
+	err := flagSet.Parse(os.Args[1:])
+	flags.Help = errors.Is(err, flag.ErrHelp)
 
 	args := flagSet.Args()
 	if len(args) == 0 {
