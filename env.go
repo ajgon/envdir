@@ -57,6 +57,12 @@ func (eb *EnvBuilder) directoryEnvs() ([]string, error) {
 
 	for _, envFile := range envFiles {
 		envPath := filepath.Join(eb.Flags.Dir, envFile.Name())
+		envFileInfo, _ := os.Stat(envPath)
+
+		if envFileInfo.IsDir() {
+			continue
+		}
+
 		envData, err := os.ReadFile(envPath)
 		if err != nil {
 			return nil, fmt.Errorf("reading env file `%s`: %w", envPath, err)

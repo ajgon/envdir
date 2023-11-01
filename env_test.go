@@ -118,7 +118,20 @@ func Test_Build(t *testing.T) {
 
 	envFile := filepath.Join(envDir, "VAR_FROM_DIR")
 	if err := os.WriteFile(envFile, []byte("value-from-dir"), 0644); err != nil {
-		t.Fatalf("error creative temporary env var file: %v", err)
+		t.Fatalf("error creating temporary env var file: %v", err)
+	}
+
+	dummyDir := filepath.Join(envDir, "directory")
+	if err := os.MkdirAll(dummyDir, 0755); err != nil {
+		t.Fatalf("error creating temporary subdir: %v", err)
+	}
+
+	if err = os.Symlink(envFile, filepath.Join(envDir, "VAR_FROM_DIR_SYMLINK")); err != nil {
+		t.Fatalf("error creative temporary env var file symlink: %v", err)
+	}
+
+	if err = os.Symlink(dummyDir, filepath.Join(envDir, "symlink-dir")); err != nil {
+		t.Fatalf("error creating temporary subdir symlink: %v", err)
 	}
 
 	t.Run("it properly parses variables from existing directory", func(t *testing.T) {
@@ -128,15 +141,23 @@ func Test_Build(t *testing.T) {
 		result, err := envBuilder.Build()
 
 		foundEnv := false
+		foundSymlinkEnv := false
 		for _, env := range result {
 			envName, envValue, _ := strings.Cut(env, `=`)
 			if envName == "VAR_FROM_DIR" && envValue == "value-from-dir" {
 				foundEnv = true
 			}
+			if envName == "VAR_FROM_DIR_SYMLINK" && envValue == "value-from-dir" {
+				foundSymlinkEnv = true
+			}
 		}
 
 		if !foundEnv {
-			t.Error("expected variable from directory to be found, but it was missing")
+			t.Error("expected variable from file in directory to be found, but it was missing")
+		}
+
+		if !foundSymlinkEnv {
+			t.Error("expected variable from symlink to file in directory to be found, but it was missing")
 		}
 
 		if err != nil {
