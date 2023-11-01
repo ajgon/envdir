@@ -1,0 +1,18 @@
+---
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Release new version
+'on':
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  lint-test:
+    uses: ajgon/envdir/.github/workflows/lint-and-test.yaml@master
+
+  release:
+    needs: lint-test
+    uses: ajgon/envdir/.github/workflows/release.yaml@master
