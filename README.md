@@ -49,7 +49,7 @@ exec /usr/bin/envdir -d /my-env-dir -p "$@"
 FROM alpine:3.18
 
 RUN apk add --no-cache --virtual .build-deps curl \
- && curl -OL "https://github.com/ajgon/envdir/releases/download/v0.1.0/envdir_$(uname -s)_$(uname -m).tar.gz" \
+ && curl -OL "https://github.com/ajgon/envdir/releases/download/v0.1.1/envdir_$(uname -s)_$(uname -m).tar.gz" \
  && tar -xzf "envdir_$(uname -s)_$(uname -m).tar.gz" -C /usr/bin/ envdir \
  && rm -rf "envdir_$(uname -s)_$(uname -m).tar.gz" \
  && apk del .build-deps
